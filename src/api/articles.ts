@@ -1,5 +1,5 @@
 import type { Profile } from "./profiles";
-import { apiDelete, apiGetJson, apiPostJson } from "./client";
+import { apiDelete, apiGetJson, apiPostJson, apiPutJson } from "./client";
 import type { ApiRequestOptions } from "./client";
 
 /** Conduit `Article` as returned by the API (uses `slug`, not numeric `id`). */
@@ -33,6 +33,13 @@ export type NewArticle = {
 };
 export type CreateArticleRequestBody = {
   article: NewArticle;
+};
+
+/** Conduit `UpdateArticle` — at least one field should be sent (see `docs/schema/swagger.json`). */
+export type UpdateArticle = {
+  title?: string;
+  description?: string;
+  body?: string;
 };
 
 export type FetchArticlesParams = {
@@ -91,4 +98,17 @@ export function createArticle(
 /** `DELETE /articles/:slug` — requires auth. */
 export function deleteArticle(slug: string, options: ApiRequestOptions): Promise<void> {
   return apiDelete(`/articles/${encodeURIComponent(slug)}`, options);
+}
+
+/** `PUT /articles/:slug` — requires auth; body uses `UpdateArticle` (title/description/body). */
+export function updateArticle(
+  slug: string,
+  article: UpdateArticle,
+  options: ApiRequestOptions
+): Promise<SingleArticleResponse> {
+  return apiPutJson<SingleArticleResponse>(
+    `/articles/${encodeURIComponent(slug)}`,
+    { article },
+    options
+  );
 }

@@ -1,7 +1,7 @@
 import { FormEvent, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
-import { createArticle } from "api/articles";
+import { Article, createArticle, updateArticle } from "api/articles";
 import { ApiError } from "api/client";
 import { useAppSelector } from "store";
 
@@ -20,14 +20,13 @@ function parseTagList(raw: string): string[] {
     .filter((t) => t !== "");
 }
 
-export default function ArticleEditor() {
+export default function ArticleEditor({ article }: { article: Article | null }) {
   const navigate = useNavigate();
   const token = useAppSelector((state) => state.auth.token);
-  const { slug } = useParams<{ slug: string }>();
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [body, setBody] = useState("");
-  const [tags, setTags] = useState("");
+  const [title, setTitle] = useState(article?.title || "");
+  const [description, setDescription] = useState(article?.description || "");
+  const [body, setBody] = useState(article?.body || "");
+  const [tags, setTags] = useState(article?.tagList.join(",") || "");
   const [submitting, setSubmitting] = useState(false);
   const [errorMessages, setErrorMessages] = useState<string[]>([]);
 
@@ -43,7 +42,14 @@ export default function ArticleEditor() {
     const tagList = parseTagList(tags);
     setSubmitting(true);
     try {
-      const { article } = await createArticle(
+      const { article: articleResponse } = article 
+      ? await updateArticle(article.slug, {
+        title: title.trim(),
+        description: description.trim(),
+        body,
+        ...(tagList.length > 0 ? { tagList } : {}),
+      }, { token })
+      : await createArticle(
         {
           title: title.trim(),
           description: description.trim(),
@@ -52,7 +58,7 @@ export default function ArticleEditor() {
         },
         { token }
       );
-      navigate(`/${encodeURIComponent(article.slug)}`, { replace: true });
+      navigate(`/${encodeURIComponent(articleResponse.slug)}`, { replace: true });
     } catch (err) {
       if (err instanceof ApiError) {
         const fromApi = messagesFromErrorBody(err.body);
@@ -93,7 +99,7 @@ export default function ArticleEditor() {
                     <div className="tag-list" />
                   </fieldset>
                   <button className="btn btn-lg pull-xs-right btn-primary" type="submit" disabled={submitting}>
-                    Publish Article
+                    {article ? "Edit" : "Publish"} Article
                   </button>
                 </fieldset>
               </form>

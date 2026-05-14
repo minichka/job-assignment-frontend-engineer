@@ -94,6 +94,30 @@ export async function apiPostJson<TResponse>(
   return (await res.json()) as TResponse;
 }
 
+export async function apiPutJson<TResponse>(
+  path: string,
+  body: unknown,
+  options?: ApiRequestOptions
+): Promise<TResponse> {
+  const headers = new Headers(options?.headers ?? undefined);
+  if (!headers.has("Content-Type")) {
+    headers.set("Content-Type", "application/json");
+  }
+
+  const res = await apiRequest(path, {
+    ...options,
+    method: "PUT",
+    headers,
+    body: JSON.stringify(body),
+  });
+
+  if (!res.ok) {
+    throw new ApiError(res.status, await readErrorBody(res));
+  }
+
+  return (await res.json()) as TResponse;
+}
+
 /** `DELETE` — response body is ignored (e.g. empty 200). */
 export async function apiDelete(path: string, options?: ApiRequestOptions): Promise<void> {
   const res = await apiRequest(path, { ...options, method: "DELETE" });
