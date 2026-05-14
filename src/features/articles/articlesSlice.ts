@@ -1,7 +1,7 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 
 import type { Article, FetchArticlesParams } from "../../api/articles";
-import { fetchArticles, fetchArticleBySlug } from "../../api/articles";
+import { favoriteArticle, fetchArticles, fetchArticleBySlug, unfavoriteArticle } from "../../api/articles";
 
 export type LoadArticlesArg = {
   params?: FetchArticlesParams;
@@ -27,6 +27,19 @@ export const loadArticle = createAsyncThunk("articles/loadArticle", async (arg: 
   const { slug, token } = arg;
   return fetchArticleBySlug(slug, token != null ? { token } : undefined);
 });
+
+export type ToggleArticleFavoriteArg = {
+  slug: string;
+  favorited: boolean;
+  token: string;
+};
+
+export const toggleArticleFavorite = createAsyncThunk(
+  "articles/toggleArticleFavorite",
+  async ({ slug, favorited, token }: ToggleArticleFavoriteArg) => {
+    return favorited ? unfavoriteArticle(slug, { token }) : favoriteArticle(slug, { token });
+  }
+);
 
 type ArticlesState = {
   list: Article[];
@@ -82,6 +95,16 @@ const articlesSlice = createSlice({
       .addCase(loadArticle.rejected, (state, action) => {
         state.articleLoading = false;
         state.articleError = action.error.message ?? "Failed to load article";
+      })
+      .addCase(toggleArticleFavorite.fulfilled, (state, action) => {
+        const updated = action.payload.article;
+        const idx = state.list.findIndex((a) => a.slug === updated.slug);
+        if (idx >= 0) {
+          state.list[idx] = updated;
+        }
+        if (state.article?.slug === updated.slug) {
+          state.article = updated;
+        }
       });
   },
 });

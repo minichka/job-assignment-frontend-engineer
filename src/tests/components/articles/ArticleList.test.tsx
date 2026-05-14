@@ -1,35 +1,83 @@
+import { configureStore } from "@reduxjs/toolkit";
 import React from "react";
+import { Provider } from "react-redux";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
 import type { Article } from "api/articles";
 import ArticleList from "components/articles/ArticleList";
+import articlesReducer from "features/articles/articlesSlice";
+import authReducer from "features/auth/authSlice";
+import profileReducer from "features/profile/profileSlice";
+import { useAppSelector } from "store";
 import { createMockArticle } from "tests/fixtures/article";
 
+const profileInitial = {
+  profile: null,
+  loading: false,
+  error: null as string | null,
+};
+
+function createArticlesStore(articles: Article[]) {
+  return configureStore({
+    reducer: {
+      auth: authReducer,
+      articles: articlesReducer,
+      profile: profileReducer,
+    },
+    preloadedState: {
+      auth: { user: null, token: null, initialized: true },
+      articles: {
+        list: articles,
+        articlesCount: articles.length,
+        loading: false,
+        articleLoading: false,
+        articleError: null,
+        error: null,
+        article: null,
+      },
+      profile: profileInitial,
+    },
+  });
+}
+
+/** Keeps list props in sync with Redux so favorite toggles update the UI like `ArticlesListPage`. */
+function ArticleListFromStore() {
+  const articles = useAppSelector((s) => s.articles.list);
+  return <ArticleList articles={articles} />;
+}
+
 function renderArticleList(articles: Article[]) {
+  const store = createArticlesStore(articles);
   return render(
-    <MemoryRouter>
-      <ArticleList articles={articles} />
-    </MemoryRouter>
+    <Provider store={store}>
+      <MemoryRouter>
+        <ArticleListFromStore />
+      </MemoryRouter>
+    </Provider>
   );
 }
 
-function ListWithRoutes({ articles }: { articles: Article[] }) {
+function ListWithRoutes() {
   return (
     <Routes>
-      <Route path="/" element={<ArticleList articles={articles} />} />
+      <Route path="/" element={<ArticleListFromStore />} />
       <Route path="/profile/:username" element={<div data-testid="route-profile" />} />
       <Route path="/:slug" element={<div data-testid="route-article" />} />
+      <Route path="/login" element={<div data-testid="route-login" />} />
     </Routes>
   );
 }
 
 function renderArticleListWithNav(articles: Article[]) {
+  const store = createArticlesStore(articles);
   return render(
-    <MemoryRouter initialEntries={["/"]}>
-      <ListWithRoutes articles={articles} />
-    </MemoryRouter>
+    <Provider store={store}>
+      <MemoryRouter initialEntries={["/"]}>
+        <ListWithRoutes />
+      </MemoryRouter>
+    </Provider>
   );
 }
 
@@ -137,5 +185,24 @@ describe("ArticleList", () => {
 
     expect(screen.getByTestId("route-profile")).toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: /conduit/i })).not.toBeInTheDocument();
+  });
+
+  it("redirects to login when an unauthenticated user clicks the favorite button", async () => {
+    const articles = [
+      createMockArticle({
+        slug: "fav-slug",
+        title: "Fav title",
+        favoritesCount: 3,
+        favorited: false,
+      }),
+    ];
+
+    const { container } = renderArticleListWithNav(articles);
+
+    const preview = container.querySelector(".article-preview") as HTMLElement;
+    const favButton = within(preview).getByRole("button", { name: /3/i });
+    await userEvent.click(favButton);
+
+    expect(screen.getByTestId("route-login")).toBeInTheDocument();
   });
 });

@@ -125,3 +125,12 @@ export async function apiDelete(path: string, options?: ApiRequestOptions): Prom
     throw new ApiError(res.status, await readErrorBody(res));
   }
 }
+
+/** `DELETE` with JSON response body (e.g. Conduit article favorite). */
+export async function apiDeleteJson<T>(path: string, options?: ApiRequestOptions): Promise<T> {
+  const res = await apiRequest(path, { ...options, method: "DELETE" });
+  if (!res.ok) {
+    throw new ApiError(res.status, await readErrorBody(res));
+  }
+  return (await res.json()) as T;
+}

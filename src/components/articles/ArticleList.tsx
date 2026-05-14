@@ -1,5 +1,3 @@
-import { Link } from "react-router-dom";
-
 import type { Article } from "../../features/articles/articlesSlice";
 import ArticleItem from "./ArticleItem";
 import TagsSidebar from "./TagsSidebar";

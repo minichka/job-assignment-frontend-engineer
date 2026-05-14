@@ -11,6 +11,7 @@ type ProfileProps = {
   articles: Article[];
   articlesLoading: boolean;
   articlesError: string | null;
+  onArticleFavoriteUpdated?: () => void;
 };
 
 export default function Profile({
@@ -19,6 +20,7 @@ export default function Profile({
   articles,
   articlesLoading,
   articlesError,
+  onArticleFavoriteUpdated,
 }: ProfileProps) {
   const avatarSrc = profile.image || PLACEHOLDER_AVATAR;
   const basePath = `/profile/${encodeURIComponent(username)}`;
@@ -69,7 +71,13 @@ export default function Profile({
             ) : articles.length === 0 ? (
               <p>No articles are here... yet.</p>
             ) : (
-              articles.map((article) => <ArticleItem key={article.slug} article={article} />)
+              articles.map((article) => (
+                <ArticleItem
+                  key={article.slug}
+                  article={article}
+                  onFavoriteUpdated={onArticleFavoriteUpdated}
+                />
+              ))
             )}
           </div>
         </div>

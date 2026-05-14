@@ -3,7 +3,7 @@ import { fetchArticles } from "api/articles";
 import Profile from "components/profile/Profile";
 import PageWrapper from "components/common/PageWrapper";
 import { loadProfile } from "features/profile/profileSlice";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useLocation, useParams } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "store";
 
@@ -21,6 +21,7 @@ const ProfilePage = () => {
   const [articles, setArticles] = useState<Article[]>([]);
   const [articlesLoading, setArticlesLoading] = useState(false);
   const [articlesError, setArticlesError] = useState<string | null>(null);
+  const [articlesRefreshKey, setArticlesRefreshKey] = useState(0);
 
   useEffect(() => {
     if (username == null || username === "") {
@@ -57,7 +58,11 @@ const ProfilePage = () => {
     return () => {
       cancelled = true;
     };
-  }, [username, favoritesTab, token]);
+  }, [username, favoritesTab, token, articlesRefreshKey]);
+
+  const onArticleFavoriteUpdated = useCallback(() => {
+    setArticlesRefreshKey((k) => k + 1);
+  }, []);
 
   const showProfileLoading = profileLoading || (profile == null && profileError == null);
 
@@ -85,6 +90,7 @@ const ProfilePage = () => {
         articles={articles}
         articlesLoading={articlesLoading}
         articlesError={articlesError}
+        onArticleFavoriteUpdated={onArticleFavoriteUpdated}
       />
     );
   }

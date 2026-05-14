@@ -1,5 +1,5 @@
 import type { Profile } from "./profiles";
-import { apiDelete, apiGetJson, apiPostJson, apiPutJson } from "./client";
+import { apiDelete, apiDeleteJson, apiGetJson, apiPostJson, apiPutJson } from "./client";
 import type { ApiRequestOptions } from "./client";
 
 /** Conduit `Article` as returned by the API (uses `slug`, not numeric `id`). */
@@ -93,6 +93,23 @@ export function createArticle(
   options?: ApiRequestOptions
 ): Promise<SingleArticleResponse> {
   return apiPostJson<SingleArticleResponse>(`/articles`, { article }, options);
+}
+
+/** `POST /articles/:slug/favorite` — requires auth; returns updated article (`favorited`, `favoritesCount`). */
+export function favoriteArticle(slug: string, options: ApiRequestOptions): Promise<SingleArticleResponse> {
+  return apiPostJson<SingleArticleResponse>(
+    `/articles/${encodeURIComponent(slug)}/favorite`,
+    {},
+    options
+  );
+}
+
+/** `DELETE /articles/:slug/favorite` — requires auth; returns updated article. */
+export function unfavoriteArticle(slug: string, options: ApiRequestOptions): Promise<SingleArticleResponse> {
+  return apiDeleteJson<SingleArticleResponse>(
+    `/articles/${encodeURIComponent(slug)}/favorite`,
+    options
+  );
 }
 
 /** `DELETE /articles/:slug` — requires auth. */
