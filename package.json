@@ -6,7 +6,7 @@
   "description": "Frontend skeleton for frontend engineer job assignment",
   "main": "index.js",
   "engines": {
-    "node": ">=14.0.0"
+    "node": ">=16 <19"
   },
   "scripts": {
     "build": "react-scripts build",
