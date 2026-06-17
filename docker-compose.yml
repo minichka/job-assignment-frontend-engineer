@@ -11,6 +11,7 @@ services:
     depends_on:
       - db
   db:
+    platform: linux/amd64 # mysql:8.0.25 is amd64-only on Docker Hub
     image: mysql:8.0.25
     cap_add:
       - SYS_NICE # fixes "mbind: Operation not permitted"

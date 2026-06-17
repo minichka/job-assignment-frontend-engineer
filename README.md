@@ -142,6 +142,17 @@ There are certain aspects that will be considered when evaluating your solution:
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
+### Node.js version
+
+Use Node.js 16 or 18 (recommended: 18).
+This project uses `react-scripts@4`, which is not compatible with newer Node versions (e.g. 20+).
+
+```bash
+nvm use 18
+npm install
+npm run build
+```
+
 ### Available Scripts
 
 In the project directory, you can run:
